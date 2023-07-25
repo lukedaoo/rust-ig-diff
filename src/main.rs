@@ -75,31 +75,30 @@ fn print_records(result: Result<Vec<Record>, Box<dyn Error>>) {
 }
 
 fn diff(record1: Vec<Record>, record2: Vec<Record>) {
-    let record1_len = record1.len();
-    let record2_len = record2.len();
+    let len1 = record1.len();
+    let len2 = record2.len();
 
-    let record1_user_ids: HashSet<Record> = record1.into_iter().collect();
-    let record2_user_ids: HashSet<Record> = record2.into_iter().collect();
+    let set1: HashSet<Record> = record1.into_iter().collect();
+    let set2: HashSet<Record> = record2.into_iter().collect();
 
-    let mut state = "Neutral".to_string();
-    let mut difference: HashSet<&Record> = HashSet::new();
+    if len1 < len2 {
+        let difference = set2.difference(&set1).clone().collect();
 
-    if record1_len < record2_len {
-        state = "Increase following".to_string();
-        difference = record2_user_ids
-            .difference(&record1_user_ids)
-            .clone()
-            .collect();
+        report("Increase following".to_string(), difference);
+        return;
     }
 
-    if record1_len > record2_len {
-        state = "Decrease following".to_string();
-        difference = record1_user_ids
-            .difference(&record2_user_ids)
-            .clone()
-            .collect();
+    if len1 > len2 {
+        let difference = set1.difference(&set2).clone().collect();
+
+        report("Decrease following".to_string(), difference);
+        return;
     }
 
-    println!("Status: {}", state);
-    println!("Difference between set1 and set2: {:?}", difference);
+    report("Neutral".to_string(), HashSet::new());
+}
+
+fn report(status: String, diff: HashSet<&Record>) {
+    println!("Status: {}", status);
+    println!("Records: {:?}", diff);
 }
