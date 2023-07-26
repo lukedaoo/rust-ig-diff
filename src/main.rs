@@ -12,16 +12,18 @@ fn main() {
     let mut second = String::new();
     input_file_path_from_console(&mut second);
 
+    println!("----- Input -----");
     // Trim the input to remove any leading/trailing whitespaces or newlines
     let first = first.trim();
     let first_records = read_csv_file(first);
-    // print_records(first_records);
+    print_records("First file".to_string(), &first_records);
 
     let second = second.trim();
     let second_records = read_csv_file(second);
-    // print_records(second_records);
+    print_records("Second file".to_string(), &second_records);
 
     // compare
+    println!("---- Report -----");
     diff(first_records.unwrap(), second_records.unwrap());
 }
 
@@ -57,15 +59,10 @@ fn read_csv_file(file_path: &str) -> Result<Vec<Record>, Box<dyn Error>> {
     Ok(rows)
 }
 
-#[warn(dead_code)]
-fn print_records(result: Result<Vec<Record>, Box<dyn Error>>) {
-    // Read the CSV file and process its content
+fn print_records(s: String, result: &Result<Vec<Record>, Box<dyn Error>>) {
     match result {
         Ok(rows) => {
-            println!("CSV content:");
-            for row in rows {
-                println!("{:?}", row);
-            }
+            println!("{}: {} records", s, rows.len());
         }
         Err(e) => {
             eprintln!("Error reading CSV file: {}", e);
@@ -82,16 +79,18 @@ fn diff(record1: Vec<Record>, record2: Vec<Record>) {
     let set2: HashSet<Record> = record2.into_iter().collect();
 
     if len1 < len2 {
+        let status = format!("{} {} following", "increase".to_string(), (len2 - len1));
         let difference = set2.difference(&set1).clone().collect();
 
-        report("Increase following".to_string(), difference);
+        report(status, difference);
         return;
     }
 
     if len1 > len2 {
+        let status = format!("{} {} following", "decrease".to_string(), (len1 - len2));
         let difference = set1.difference(&set2).clone().collect();
 
-        report("Decrease following".to_string(), difference);
+        report(status, difference);
         return;
     }
 
@@ -100,5 +99,8 @@ fn diff(record1: Vec<Record>, record2: Vec<Record>) {
 
 fn report(status: String, diff: HashSet<&Record>) {
     println!("Status: {}", status);
-    println!("Records: {:?}", diff);
+    println!("Records:");
+    for record in diff {
+        println!("       {:?}", record);
+    }
 }
