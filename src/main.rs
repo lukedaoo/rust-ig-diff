@@ -4,6 +4,7 @@ use std::process;
 
 use csv::ReaderBuilder;
 use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 
 fn main() {
     let mut first = String::new();
@@ -27,10 +28,22 @@ fn main() {
     diff(first_records.unwrap(), second_records.unwrap());
 }
 
-#[derive(Debug, Eq, Hash, PartialEq)]
+#[derive(Debug, Eq)]
 struct Record {
     user_id: String,
     user_name: String,
+}
+
+impl PartialEq for Record {
+    fn eq(&self, other: &Self) -> bool {
+        self.user_id == other.user_id
+    }
+}
+
+impl Hash for Record {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.user_id.hash(state);
+    }
 }
 
 fn input_file_path_from_console(input_path: &mut String) {
@@ -94,11 +107,28 @@ fn diff(record1: Vec<Record>, record2: Vec<Record>) {
         return;
     }
 
-    report("Neutral".to_string(), HashSet::new());
+    let status = format!("Neutral");
+    let diff1 = set1.difference(&set2).clone().collect();
+    let diff2 = set2.difference(&set1).clone().collect();
+
+    print_status(status);
+    print_diff(diff1);
+    print_diff(diff2);
 }
 
 fn report(status: String, diff: HashSet<&Record>) {
+    print_status(status);
+    print_diff(diff);
+}
+
+fn print_status(status: String) {
     println!("Status: {}", status);
+}
+
+fn print_diff(diff: HashSet<&Record>) {
+    if diff.len() == 0 {
+        return;
+    }
     println!("Records:");
     for record in diff {
         println!("       {:?}", record);
